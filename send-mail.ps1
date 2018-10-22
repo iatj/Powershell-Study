@@ -60,5 +60,5 @@ IF ([string]::IsNullOrEmpty($attachment)) {
     Send-MailMessage -To $emailTo -From $emailFrom -Subject $emailSubject -Body $emailBody -BodyAsHTML -Attachments $attachment -SmtpServer $emailSmtpServer
 }
 
-write-host "Mail Sent"
+Write-Output "Mail Sent"
  
