@@ -41,9 +41,11 @@ else
     $dbs = $srv.Databases 
 
     foreach ($Database in $dbs) 
-    { 
+    {   
+        # Listar Bancos e seus Status.
+        (Get-Date).ToString() + " - Banco de dados:  " + ($Database.name).tostring() + " - Status: " + ($Database.status).ToString() | Out-File $LogPath"Backup_SQLDatabases_v2_LOG_"$timeStamp".txt" -Width 256 -Encoding ascii -Force -Append
 
-        if($Database.Name -ne "tempdb" -and $Database.status -eq "Normal"  ) 
+        if($Database.Name -ne "tempdb" -and ($Database.status).ToString().Contains("Normal") ) 
         {   
         
             $TargetDir = $BackupFolder + "Automatico\" + ($Database.Name).ToString()
@@ -51,7 +53,7 @@ else
             # Verifica se Path\<database name> existe e cria caso n�o exista
             if( -Not (Test-Path -Path $TargetDir ) )
             {
-                (Get-Date).tostring() + "- Criar diretorio: " + $TargetDir | Out-File $LogPath"Backup_SQLDatabases_v2_LOG_"$timeStamp".txt" -Width 256 -Encoding ascii -Force -Append
+                (Get-Date).tostring() + " - Criar diretorio: " + $TargetDir | Out-File $LogPath"Backup_SQLDatabases_v2_LOG_"$timeStamp".txt" -Width 256 -Encoding ascii -Force -Append
                 New-Item -ItemType Directory -Force -Path $TargetDir
             }
             
