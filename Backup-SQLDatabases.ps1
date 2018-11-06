@@ -52,6 +52,8 @@ if([string]::IsNullOrEmpty($srv.InstanceName) -and [string]::IsNullOrEmpty($srv.
     Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
     (Get-Date).ToString() + " - Erro ao acessar " + $serverName  | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
     Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+
+    $BodyEmail = "Backup SQL Server [Erro]. Verifique Log " + ($LogFileNameComplete).ToString()
 }
 else 
 {
@@ -77,7 +79,7 @@ else
             {   
                 if(($Database.RecoveryModel).ToString() -eq "Simple")
                 {
-                    (Get-Date).ToString() + " - Skip:  " + ($Database.name).tostring() + " - Recovery Model: " + ($Database.RecoveryModel).ToString() + " Inadequado para Backup Incremental" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+                    (Get-Date).ToString() + " - Desconsiderar: " + ($Database.name).tostring() + " - Recovery Model: " + ($Database.RecoveryModel).ToString() + " Inadequado para Backup Incremental" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
                     # Buscar Proximo Item
                     Continue
                 }
@@ -92,7 +94,7 @@ else
             {   
                 if(($Database.RecoveryModel).ToString() -eq "Simple")
                 {
-                    (Get-Date).ToString() + " - Skip:  " + ($Database.name).tostring() + " - Recovery Model: " + ($Database.RecoveryModel).ToString() + " Inadequado para Backup de T-Log" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+                    (Get-Date).ToString() + " - Desconsiderar: " + ($Database.name).tostring() + " - Recovery Model: " + ($Database.RecoveryModel).ToString() + " Inadequado para Backup de T-Log" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
                     # Buscar Proximo Item
                     Continue
                 }
@@ -144,11 +146,12 @@ else
 
     Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
     (Get-Date).ToString() + " - Fim do Processamento" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+
+    $BodyEmail = "Backup SQL Server. Verifique pasta destino: " + ($BackupFolder).ToString() + ", e log do processamento: " + ($LogFileNameComplete).ToString()
 }
 
 # Enviar Email 
-$SubjectEmail = "Backup SQL Server; " + ($env:computername).ToString() + "\" + ($srv.InstanceName).ToString()
-$BodyEmail = "Backup SQL Server. Verifique pasta destino: " + ($BackupFolder).ToString()
+$SubjectEmail = "Backup SQL Server: " + ($serverName).ToString()
 
 (Get-Date).ToString() + " - Enviar Email" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 Send-MailMessage -To $DBAEmail -From $SQLSourceEmail -SMTPServer $SmtpTargetServer -Subject $SubjectEmail -Body $BodyEmail -Attachments ($LogFileNameComplete).ToString() 
