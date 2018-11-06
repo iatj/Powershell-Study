@@ -1,3 +1,19 @@
+<# 
+    Script to create SQL Server Backups
+    
+    CESAR - Centro de Estudos e Sistemas Avançados do Recife
+    
+    Author: Ivan Tavares Junior     -   05 November 2018
+        . Goal: Create first version
+    
+    # -------------------------------------------------------------------------------------------------------------- +        
+
+    Example:
+
+    powershell.exe -ExecutionPolicy Bypass D:\Backups\Batchs\Powershell\Backup-SQLDatabases_v4.ps1 -BackupType FULL -servername MIDWAY\SQLExpress2008r2 -BackupFolder \\fobos\Backup\Midway\SQLExpress2008r2\ -SQLSourceEmail MIDWAY-SQLExpress2008r2@ntfy.cesar.org.br -DBAEmail dba-l@cesar.org.br -SmtpTargetServer notify.cesar.org.br -LogPath D:\Backups\Logs\SQLExpress2008r2\
+
+#>
+
 param(  [Parameter(Mandatory=$True,Position=1)] [ValidateSet("FULL", "DIFF", "TLOG")] [string] $BackupType = "FULL",
         [Parameter(Mandatory=$True,Position=2)] [string] $serverName = "DOKI\SQLExpress2014", 
         [Parameter(Mandatory=$True,Position=3)] [string] $BackupFolder = "D:\Backups\",
@@ -7,7 +23,7 @@ param(  [Parameter(Mandatory=$True,Position=1)] [ValidateSet("FULL", "DIFF", "TL
         [Parameter(Mandatory=$True,Position=7)] [string] $LogPath = "C:\Temp\"
         )
 
-# Montar Localizaï¿½ï¿½o e Nome do Arquivo de Saida da Execuï¿½ï¿½o (LogFileNameComplete)
+# Definir Local (PATH) e Nome do Arquivo de Saida (LogFileNameComplete)
 $timeStamp = Get-Date -format yyyy_MM_dd_HHmmss 
 $LogFileName = "Backup_SQLDatabases_BkpType_" + ($BackupType).ToString() + "_OUTPUT_"
 $LogFileNameComplete = ($LogPath).ToString()+($LogFileName).ToString()+$timeStamp.ToString()+".txt"
