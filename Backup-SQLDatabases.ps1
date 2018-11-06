@@ -1,7 +1,7 @@
 <# 
     Script to create SQL Server Backups
     
-    CESAR - Centro de Estudos e Sistemas Avançados do Recife
+    CESAR - Centro de Estudos e Sistemas Avanï¿½ados do Recife
     
     Author: Ivan Tavares Junior     -   05 November 2018
         . Goal: Create first version
@@ -20,33 +20,39 @@ param(  [Parameter(Mandatory=$True,Position=1)] [ValidateSet("FULL", "DIFF", "TL
         [Parameter(Mandatory=$True,Position=4)] [string] $SQLSourceEmail = "DOKI-SQLExpress2012@ntfy.cesar.org.br",
         [Parameter(Mandatory=$True,Position=5)] [string] $DBAEmail = "iatj@cesar.org.br",
         [Parameter(Mandatory=$True,Position=6)] [string] $SmtpTargetServer = "notify.cesar.org.br",
-        [Parameter(Mandatory=$True,Position=7)] [string] $LogPath = "C:\Temp\"
+        [Parameter(Mandatory=$True,Position=7)] [string] $LogPath = "C:\Temp\",
+        [Parameter(Mandatory=$false,Position=8)] [ValidateRange(-15,0)] [Int] $DaysToKeep = -3
         )
 
-# Definir Local (PATH) e Nome do Arquivo de Saida (LogFileNameComplete)
+## Definir Local (PATH) e Nome do Arquivo de Saida (LogFileNameComplete)
 $timeStamp = Get-Date -format yyyy_MM_dd_HHmmss 
 $LogFileName = "Backup_SQLDatabases_BkpType_" + ($BackupType).ToString() + "_OUTPUT_"
 $LogFileNameComplete = ($LogPath).ToString()+($LogFileName).ToString()+$timeStamp.ToString()+".txt"
+
+## Definir parametros para remover arquivos antigos
+$CurrentDate = Get-Date
+$DatetoDelete = $CurrentDate.AddDays($DaysToKeep)
 
 [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SMO") | Out-Null
 [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.SmoExtended") | Out-Null
 
 
-# Verifica se LogPath existe e cria caso inexistente
+## Verifica se LogPath existe e cria caso inexistente
 if( -Not (Test-Path -Path $LogPath ) )
 {
     New-Item -ItemType Directory -Force -Path $LogPath
 }
 
-# Iniciar Log
+## Iniciar Log
 (Get-Date).ToString() + " - Log Path: " + ($LogFileNameComplete).ToString() | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 (Get-Date).ToString() + " - Inicio Processamento" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+(Get-Date).ToString() + " - Data limite para manter arquivos antigos" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 
 $srv = New-Object ("Microsoft.SqlServer.Management.Smo.Server") $serverName
 
 ## Verifica se a Instancia SQL esta ativa
-# if($srv.InstanceName -eq $null -and $srv.Information.ResourceVersion -eq $null)
 if([string]::IsNullOrEmpty($srv.InstanceName) -and [string]::IsNullOrEmpty($srv.Information.ResourceVersion))
 {    
     Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
@@ -115,7 +121,7 @@ else
             $bk.MediaDescription = "Disk"
             $bk.Devices.AddDevice($BackupFileName , "File") 
 
-            # Habilita compressao se Engine suportar. Express não suporta CompressionOption
+            # Habilita compressao se Engine suportar. Express nï¿½o suporta CompressionOption
             if($srv.EngineEdition -eq "Express")
                 { $bk.CompressionOption = 0 }
             else 
@@ -132,23 +138,41 @@ else
             
             TRY 
             {
-                # Criar o arquivo de seguranÃ§a (Backup)    
+                ## Criar o arquivo de Backup
                 $bk.SqlBackup($srv) 
                 (Get-Date).ToString() + "   . Backup Path: " + $BackupFileName | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+                Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+
+                ## Exibir lista de arquivos antigos que devem ser removidos
+                (Get-Date).ToString() + " - Remover arquivos antigos: " | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+                Get-ChildItem $TargetDir -Recurse -include *.trn,*.bak -file | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Add-Content -Path ($LogFileNameComplete).ToString() -Encoding ascii -Force 
+                
+                ## Remover os arquivos de backup listados acima
+                Get-ChildItem $TargetDir -Recurse -include *.trn,*.bak -file | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item 
+                Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
             } 
             CATCH 
             {
-                $Database.Name + " backup failed." | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+                $Database.Name + " Backup falhou !" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
                 $_.Exception.Message | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
             } 
         }
     } 
 
     Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
-    (Get-Date).ToString() + " - Fim do Processamento" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 
+    ## Finalizar o Log de processamento e enviar por email
+    (Get-Date).ToString() + " - Fim do Processamento" | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
     $BodyEmail = "Backup SQL Server. Verifique pasta destino: " + ($BackupFolder).ToString() + ", e log do processamento: " + ($LogFileNameComplete).ToString()
 }
+
+## Exibir lista de arquivos de log de processamento antigos que devem ser removidos
+(Get-Date).ToString() + " - Remover arquivos de log antigos: " | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
+Get-ChildItem $LogPath -Recurse -include *.txt -file | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-10) } | Add-Content -Path ($LogFileNameComplete).ToString() -Encoding ascii -Force 
+
+## Remover os arquivos de log de processamento listados acima
+Get-ChildItem $LogPath -Recurse -include *.txt -file | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-10) } | Remove-Item 
+Write-Output `n | Out-File ($LogFileNameComplete).ToString() -Width 256 -Encoding ascii -Force -Append
 
 # Enviar Email 
 $SubjectEmail = "Backup SQL Server: " + ($serverName).ToString()
