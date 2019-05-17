@@ -1,25 +1,26 @@
 <# 
     Script to create SQL Server Backups
     
-    CESAR - Centro de Estudos e Sistemas Avan�ados do Recife
+    i3 Data Dominus
     
     Author: Ivan Tavares Junior     -   05 November 2018
-        . Goal: Create first version
+
+    Goal: Create SQL Server database Backups
     
     # -------------------------------------------------------------------------------------------------------------- +        
 
     Example:
 
-    powershell.exe -ExecutionPolicy Bypass D:\Backups\Batchs\Powershell\Backup-SQLDatabases_v4.ps1 -BackupType FULL -servername MIDWAY\SQLExpress2008r2 -BackupFolder \\fobos\Backup\Midway\SQLExpress2008r2\ -SQLSourceEmail MIDWAY-SQLExpress2008r2@ntfy.cesar.org.br -DBAEmail dba-l@cesar.org.br -SmtpTargetServer notify.cesar.org.br -LogPath D:\Backups\Logs\SQLExpress2008r2\
+    powershell.exe -ExecutionPolicy Bypass D:\Backups\Batchs\Powershell\Backup-SQLDatabases_v4.ps1 -BackupType FULL -servername MIDWAY\SQLExpress2008r2 -BackupFolder \\fobos\Backup\Midway\SQLExpress2008r2\ -SQLSourceEmail MIDWAY-SQLExpress2008r2@gmail.com -DBAEmail dba-l_ServerSQL@gmail.com -SmtpTargetServer smtp.gmail.com -LogPath D:\Backups\Logs\SQLExpress2008r2\
 
 #>
 
 param(  [Parameter(Mandatory=$True,Position=1)] [ValidateSet("FULL", "DIFF", "TLOG")] [string] $BackupType = "FULL",
-        [Parameter(Mandatory=$True,Position=2)] [string] $serverName = "DOKI\SQLExpress2014", 
+        [Parameter(Mandatory=$True,Position=2)] [string] $serverName = "SQLServer\SQLExpress2014", 
         [Parameter(Mandatory=$True,Position=3)] [string] $BackupFolder = "D:\Backups\",
-        [Parameter(Mandatory=$True,Position=4)] [string] $SQLSourceEmail = "DOKI-SQLExpress2012@ntfy.cesar.org.br",
-        [Parameter(Mandatory=$True,Position=5)] [string] $DBAEmail = "iatj@cesar.org.br",
-        [Parameter(Mandatory=$True,Position=6)] [string] $SmtpTargetServer = "notify.cesar.org.br",
+        [Parameter(Mandatory=$True,Position=4)] [string] $SQLSourceEmail = "SQLServer@gmail.com",
+        [Parameter(Mandatory=$True,Position=5)] [string] $DBAEmail = "dba-l_SQLServer@gmail.com",
+        [Parameter(Mandatory=$True,Position=6)] [string] $SmtpTargetServer = "smtp.gmail.com",
         [Parameter(Mandatory=$True,Position=7)] [string] $LogPath = "C:\Temp\",
         [Parameter(Mandatory=$false,Position=8)] [ValidateRange(-15,0)] [Int] $DaysToKeep = -3
         )
