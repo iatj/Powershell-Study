@@ -30,4 +30,4 @@ function Test-SqlConnection {
 
 # (Get-Credential).Password | ConvertFrom-SecureString | Out-File "C:\Temp\Encrypt_String.txt"
 
-Test-SqlConnection -ServerName 'doki.cesar.org.br' -DatabaseName 'CorporeRM' -Credential (Get-Credential)
+Test-SqlConnection -ServerName 'server_name_demo' -DatabaseName 'database_demo' -Credential (Get-Credential)
